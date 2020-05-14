@@ -41,11 +41,12 @@ public class MainActivity extends AppCompatActivity {
     double squarewidth;
     double height,width;
     private float azimuth,pitch,roll;
-    private HashMap<Double,int[]> teslaCoordinates = new HashMap<>();
+    private HashMap<Long,int[]> teslaCoordinates = new HashMap<>();
     private float[] floatOrientationMatrix = new float[9];
     private Button mapToCell,stopMapping;
     double tesla,tesla2;
     private double stepsAmount = 0.0;
+    private boolean isMapping;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -100,31 +101,37 @@ public class MainActivity extends AppCompatActivity {
 
 
         final SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        final Sensor magnetometerReading = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED);
+        final Sensor magnetometerReading = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         final Sensor stepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
 
         tesla2 = 0.0;
         SensorEventListener magnetometerListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
-                    azimuth = Math.round(event.values[0]);
-                    pitch = Math.round(event.values[1]);
-                    roll = Math.round(event.values[2]);
+                    azimuth = event.values[0];
+                    pitch = event.values[1];
+                    roll = event.values[2];
 
                     tesla = Math.sqrt((azimuth*azimuth) + (pitch*pitch) + (roll*roll));
                     Log.d("tesla", "tesla is " + String.valueOf(tesla));
                     Log.d("tesla", "tesla2 is " + String.valueOf(tesla2));
                     Log.d("tesla", "rounded tesla is " + String.valueOf(Math.ceil(tesla)));
-                    int[] currentLoc = teslaCoordinates.get(tesla);
-                    if(currentLoc != null){
-                        lastKnownRow = currentLoc[0];
-                        lastKnownCol = currentLoc[1];
-                        CreateCell(R.drawable.square_path,currentLoc[0],currentLoc[1]);
+                    if(isMapping){
+                        if(!teslaCoordinates.containsKey(Math.round(tesla)) && !teslaCoordinates.containsValue(new int[]{currentRow,currentCol}))
+                            teslaCoordinates.put(Math.round(tesla),new int[]{currentRow,currentCol});
                     }
+                    else{
+                        int[] currentLoc = teslaCoordinates.get(Math.round(tesla));
+                        if(currentLoc != null){
+                            lastKnownRow = currentLoc[0];
+                            lastKnownCol = currentLoc[1];
+                            CreateCell(R.drawable.square_path,currentLoc[0],currentLoc[1]);
+                        }
 //                if(Math.round(tesla) < Math.round(tesla2 + 5) && Math.round(tesla) > Math.round(tesla2 - 5))
 //                CreateCell(R.drawable.square_start,20,4);
-                    else{
-                        CreateCell(R.drawable.square,lastKnownRow,lastKnownCol);
+                        else{
+                            CreateCell(R.drawable.square,lastKnownRow,lastKnownCol);
+                        }
                     }
             }
 
@@ -152,9 +159,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(),String.valueOf(Math.round(tesla)),Toast.LENGTH_SHORT).show();
+                stopMapping.setEnabled(true);
+                mapToCell.setEnabled(false);
+                isMapping = true;
 
-                if(!teslaCoordinates.containsKey(tesla))
-                    teslaCoordinates.put(tesla,new int[]{currentRow,currentCol});
 //                if(!teslaCoordinates.containsKey(Math.round(tesla + 1)))
 //                    teslaCoordinates.put(Math.round(tesla + 1),new int[]{currentRow,currentCol});
 //                if(!teslaCoordinates.containsKey(Math.round(tesla + 2)))
@@ -180,7 +188,9 @@ public class MainActivity extends AppCompatActivity {
         stopMapping.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                isMapping = false;
+                mapToCell.setEnabled(true);
+                stopMapping.setEnabled(false);
             }
         });
 //        for(int i = 1; i < path.size() - 1; i++){
