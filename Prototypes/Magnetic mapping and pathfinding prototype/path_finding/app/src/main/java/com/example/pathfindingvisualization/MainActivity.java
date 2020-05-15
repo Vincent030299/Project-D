@@ -28,6 +28,8 @@ import android.widget.Toast;
 
 import com.circuitwall.ml.algorithm.test.evolution.TestAlgorithm;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -41,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     double squarewidth;
     double height,width;
     private float azimuth,pitch,roll;
-    private HashMap<Long,int[]> teslaCoordinates = new HashMap<>();
+    private HashMap<Long,Double> teslaCoordinates = new HashMap<>();
     private float[] floatOrientationMatrix = new float[9];
     private Button mapToCell,stopMapping;
     double tesla,tesla2;
@@ -102,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
 
         final SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         final Sensor magnetometerReading = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        final Sensor stepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+        final Sensor stepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
 
         tesla2 = 0.0;
         SensorEventListener magnetometerListener = new SensorEventListener() {
@@ -116,24 +118,26 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("tesla", "tesla is " + String.valueOf(tesla));
                     Log.d("tesla", "tesla2 is " + String.valueOf(tesla2));
                     Log.d("tesla", "rounded tesla is " + String.valueOf(Math.ceil(tesla)));
-                    if(isMapping){
-                        if(!teslaCoordinates.containsKey(Math.round(tesla)) && !teslaCoordinates.containsValue(new int[]{currentRow,currentCol}))
-                            teslaCoordinates.put(Math.round(tesla),new int[]{currentRow,currentCol});
-                    }
-                    else{
-                        int[] currentLoc = teslaCoordinates.get(Math.round(tesla));
+//                    if(isMapping){
+//
+//                    }
+//                    else{
+                        Double currentLoc = teslaCoordinates.get(Math.round(tesla));
                         if(currentLoc != null){
-                            lastKnownRow = currentLoc[0];
-                            lastKnownCol = currentLoc[1];
-                            CreateCell(R.drawable.square_path,currentLoc[0],currentLoc[1]);
+                            int[] coordinates = DepairNumber(currentLoc);
+                            if(lastKnownCol != 0 && lastKnownRow != 0 && lastKnownRow != coordinates[0] && lastKnownCol != coordinates[1])
+                                CreateCell(R.drawable.square,lastKnownRow,lastKnownCol);
+                            lastKnownRow = coordinates[0];
+                            lastKnownCol = coordinates[1];
+                            CreateCell(R.drawable.square_path,coordinates[0],coordinates[1]);
                         }
 //                if(Math.round(tesla) < Math.round(tesla2 + 5) && Math.round(tesla) > Math.round(tesla2 - 5))
 //                CreateCell(R.drawable.square_start,20,4);
-                        else{
-                            CreateCell(R.drawable.square,lastKnownRow,lastKnownCol);
-                        }
+//                        else{
+//                            CreateCell(R.drawable.square,lastKnownRow,lastKnownCol);
+//                        }
                     }
-            }
+//            }
 
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -144,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
         SensorEventListener stepCounterListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
-                stepsAmount++;
+                Log.d("steps", String.valueOf(event.values[0]));
             }
 
             @Override
@@ -162,6 +166,10 @@ public class MainActivity extends AppCompatActivity {
                 stopMapping.setEnabled(true);
                 mapToCell.setEnabled(false);
                 isMapping = true;
+                double uniqueNr = UniqueNumber(currentRow,currentCol);
+                if(teslaCoordinates.get(Math.round(tesla)) == null) {
+                    teslaCoordinates.put(Math.round(tesla),uniqueNr);
+                }
 
 //                if(!teslaCoordinates.containsKey(Math.round(tesla + 1)))
 //                    teslaCoordinates.put(Math.round(tesla + 1),new int[]{currentRow,currentCol});
@@ -215,5 +223,32 @@ public class MainActivity extends AppCompatActivity {
         oImageView.setImageResource(img);
         oImageView.setLayoutParams(layoutParams);
         gridLayout.addView(oImageView);
+    }
+    private static double UniqueNumber(int a,int b){
+        //Cantors pairing function only works for positive integers
+        if (a > -1 || b > -1) {
+            //Creating an array of the two inputs for comparison later
+            int[] input = {a, b};
+
+            //Using Cantors paring function to generate unique number
+            long result = (long) (0.5 * (a + b) * (a + b + 1) + b);
+
+            /*Calling depair function of the result which allows us to compare
+             the results of the depair function with the two inputs of the pair
+             function*/
+            if (Arrays.equals(DepairNumber(result), input)) {
+                return result; //Return the result
+            } else {
+                return -1; //Otherwise return rouge value
+            }
+        } else {
+            return -1; //Otherwise return rouge value
+        }
+    }
+    private static int[] DepairNumber(double z){
+        long t = (int) (Math.floor((Math.sqrt(8 * z + 1) - 1) / 2));
+        int x = (int) (t * (t + 3) / 2 - z);
+        int y = (int) (z - t * (t + 1) / 2);
+        return new int[]{x, y};
     }
 }
