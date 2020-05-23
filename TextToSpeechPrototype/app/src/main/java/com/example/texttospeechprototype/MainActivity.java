@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         final SensorManager sensorManager = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
         final Sensor stepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+        sensorManager.registerListener((SensorEventListener) this,stepDetector,SensorManager.SENSOR_DELAY_NORMAL);
 
         list = new ArrayList<String>();
         list.add("2 steps forward");
