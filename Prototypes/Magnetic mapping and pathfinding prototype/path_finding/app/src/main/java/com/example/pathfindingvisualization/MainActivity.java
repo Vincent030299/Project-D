@@ -29,13 +29,14 @@ import android.widget.Toast;
 import com.circuitwall.ml.algorithm.test.evolution.TestAlgorithm;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 import static android.widget.GridLayout.ALIGN_BOUNDS;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SensorEventListener{
     GridLayout gridLayout;
     List<CustomNode> path;
     int currentRow,currentCol;
@@ -43,12 +44,16 @@ public class MainActivity extends AppCompatActivity {
     double squarewidth;
     double height,width;
     private float azimuth,pitch,roll;
-    private HashMap<Long,Double> teslaCoordinates = new HashMap<>();
+    private HashMap<Long,int[]> teslaCoordinates = new HashMap<>();
     private float[] floatOrientationMatrix = new float[9];
     private Button mapToCell,stopMapping;
-    double tesla,tesla2;
+    double tesla,lastTeslaVal;
     private double stepsAmount = 0.0;
     private boolean isMapping;
+    private final float alpha = (float) 0.8000;
+    private float[] gravity = new float[3];
+    private float[] magnetic = new float[3];
+    private ArrayList<int[]> lastKnownLocation = new ArrayList<>();
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -69,19 +74,19 @@ public class MainActivity extends AppCompatActivity {
         int rows = 30;
         int cols = 20;
         Astar aStar = new Astar(rows, cols, initialNode, finalNode);
-        int[][] blocksArray = new int[][]
-                {{0,0},{1,0},{2,0},{6,0},{7,0},{8,0},{9,0},{10,0},{11,0},{12,0}
-                ,{13,0},{14,0},{15,0},{16,0},{17,0},{18,0},{19,0},{20,0},{21,0},{22,0}
-                ,{23,0},{24,0},{25,0},{26,0},{27,0},{28,0},{29,0},{10,6},{10,7},{10,8}
-                ,{10,9},{11,6},{11,7},{11,8},{11,9},{12,6},{12,7},{12,8},{12,9},{13,6}
-                ,{13,7},{13,8},{13,9},{14,6},{14,7},{14,8},{14,9},{15,6},{15,7},{15,8}
-                ,{15,9},{16,6},{16,7},{16,8},{16,9},{17,6},{17,7},{17,8},{17,9},{18,6}
-                ,{18,7},{18,8},{18,9},{0,15},{1,15},{2,15},{3,15},{4,15},{5,15},{6,15},{7,15},{8,15},{9,15},{10,15},{11,15},{12,15}
-                ,{13,15},{14,15},{15,15},{16,15},{17,15},{18,15},{19,15},{20,15},{21,15},{22,15}
-                ,{23,15},{24,15},{25,15},{26,15},{27,15},{28,15},{29,15}
-                ,{0,1},{0,2},{0,3},{0,4},{0,5},{0,6},{0,7},{0,8},{0,9},{0,10},{0,11},{0,12},{0,13},{0,14}
-                ,{29,1},{29,2},{29,3},{29,4},{29,5},{29,6},{29,7},{29,8},{29,9},{29,10},{29,11},{29,12},{29,13},{29,14}};
-        aStar.setBlocks(blocksArray);
+//        int[][] blocksArray = new int[][]
+//                {{0,0},{1,0},{2,0},{6,0},{7,0},{8,0},{9,0},{10,0},{11,0},{12,0}
+//                ,{13,0},{14,0},{15,0},{16,0},{17,0},{18,0},{19,0},{20,0},{21,0},{22,0}
+//                ,{23,0},{24,0},{25,0},{26,0},{27,0},{28,0},{29,0},{10,6},{10,7},{10,8}
+//                ,{10,9},{11,6},{11,7},{11,8},{11,9},{12,6},{12,7},{12,8},{12,9},{13,6}
+//                ,{13,7},{13,8},{13,9},{14,6},{14,7},{14,8},{14,9},{15,6},{15,7},{15,8}
+//                ,{15,9},{16,6},{16,7},{16,8},{16,9},{17,6},{17,7},{17,8},{17,9},{18,6}
+//                ,{18,7},{18,8},{18,9},{0,15},{1,15},{2,15},{3,15},{4,15},{5,15},{6,15},{7,15},{8,15},{9,15},{10,15},{11,15},{12,15}
+//                ,{13,15},{14,15},{15,15},{16,15},{17,15},{18,15},{19,15},{20,15},{21,15},{22,15}
+//                ,{23,15},{24,15},{25,15},{26,15},{27,15},{28,15},{29,15}
+//                ,{0,1},{0,2},{0,3},{0,4},{0,5},{0,6},{0,7},{0,8},{0,9},{0,10},{0,11},{0,12},{0,13},{0,14}
+//                ,{29,1},{29,2},{29,3},{29,4},{29,5},{29,6},{29,7},{29,8},{29,9},{29,10},{29,11},{29,12},{29,13},{29,14}};
+//        aStar.setBlocks(blocksArray);
 //        path = aStar.findPath();
         for(int i = 0; i < gridLayout.getRowCount();i++){
             for(int j = 0; j < gridLayout.getColumnCount();j++){
@@ -97,100 +102,30 @@ public class MainActivity extends AppCompatActivity {
                 CreateCell(R.drawable.square,i,j);
             }
         }
-        for(int i = 0; i < blocksArray.length;i++){
-            CreateCell(R.drawable.square_block,blocksArray[i][0],blocksArray[i][1]);
-        }
+//        for(int i = 0; i < blocksArray.length;i++){
+//            CreateCell(R.drawable.square_block,blocksArray[i][0],blocksArray[i][1]);
+//        }
 
 
-        final SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        final SensorManager sensorManager = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
         final Sensor magnetometerReading = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        final Sensor stepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+        final Sensor stepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+        final Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-        tesla2 = 0.0;
-        SensorEventListener magnetometerListener = new SensorEventListener() {
-            @Override
-            public void onSensorChanged(SensorEvent event) {
-                    azimuth = event.values[0];
-                    pitch = event.values[1];
-                    roll = event.values[2];
-
-                    tesla = Math.sqrt((azimuth*azimuth) + (pitch*pitch) + (roll*roll));
-                    Log.d("tesla", "tesla is " + String.valueOf(tesla));
-                    Log.d("tesla", "tesla2 is " + String.valueOf(tesla2));
-                    Log.d("tesla", "rounded tesla is " + String.valueOf(Math.ceil(tesla)));
-//                    if(isMapping){
-//
-//                    }
-//                    else{
-                        Double currentLoc = teslaCoordinates.get(Math.round(tesla));
-                        if(currentLoc != null){
-                            int[] coordinates = DepairNumber(currentLoc);
-                            if(lastKnownCol != 0 && lastKnownRow != 0 && lastKnownRow != coordinates[0] && lastKnownCol != coordinates[1])
-                                CreateCell(R.drawable.square,lastKnownRow,lastKnownCol);
-                            lastKnownRow = coordinates[0];
-                            lastKnownCol = coordinates[1];
-                            CreateCell(R.drawable.square_path,coordinates[0],coordinates[1]);
-                        }
-//                if(Math.round(tesla) < Math.round(tesla2 + 5) && Math.round(tesla) > Math.round(tesla2 - 5))
-//                CreateCell(R.drawable.square_start,20,4);
-//                        else{
-//                            CreateCell(R.drawable.square,lastKnownRow,lastKnownCol);
-//                        }
-                    }
-//            }
-
-            @Override
-            public void onAccuracyChanged(Sensor sensor, int accuracy) {
-                Log.d("accuracy", "onAccuracyChanged: " + String.valueOf(accuracy));
-            }
-        };
-
-        SensorEventListener stepCounterListener = new SensorEventListener() {
-            @Override
-            public void onSensorChanged(SensorEvent event) {
-                Log.d("steps", String.valueOf(event.values[0]));
-            }
-
-            @Override
-            public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-            }
-        };
-        sensorManager.registerListener(magnetometerListener,magnetometerReading,SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(stepCounterListener,stepDetector,SensorManager.SENSOR_DELAY_NORMAL);
+        lastTeslaVal = 0.0;
+        sensorManager.registerListener((SensorEventListener) this,magnetometerReading,SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener((SensorEventListener) this,stepDetector,SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener((SensorEventListener) this,accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
         mapToCell.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(),String.valueOf(Math.round(tesla)),Toast.LENGTH_SHORT).show();
                 stopMapping.setEnabled(true);
                 mapToCell.setEnabled(false);
                 isMapping = true;
-                double uniqueNr = UniqueNumber(currentRow,currentCol);
-                if(teslaCoordinates.get(Math.round(tesla)) == null) {
-                    teslaCoordinates.put(Math.round(tesla),uniqueNr);
-                }
-
-//                if(!teslaCoordinates.containsKey(Math.round(tesla + 1)))
-//                    teslaCoordinates.put(Math.round(tesla + 1),new int[]{currentRow,currentCol});
-//                if(!teslaCoordinates.containsKey(Math.round(tesla + 2)))
-//                    teslaCoordinates.put(Math.round(tesla + 2),new int[]{currentRow,currentCol});
-//                if(!teslaCoordinates.containsKey(Math.round(tesla + 3)))
-//                    teslaCoordinates.put(Math.round(tesla + 3),new int[]{currentRow,currentCol});
-//                if(!teslaCoordinates.containsKey(Math.round(tesla + 4)))
-//                    teslaCoordinates.put(Math.round(tesla + 4),new int[]{currentRow,currentCol});
-//                if(!teslaCoordinates.containsKey(Math.round(tesla + 5)))
-//                    teslaCoordinates.put(Math.round(tesla + 5),new int[]{currentRow,currentCol});
-//                if(!teslaCoordinates.containsKey(Math.round(tesla - 1)))
-//                    teslaCoordinates.put(Math.round(tesla - 1),new int[]{currentRow,currentCol});
-//                if(!teslaCoordinates.containsKey(Math.round(tesla - 2)))
-//                    teslaCoordinates.put(Math.round(tesla - 2 ),new int[]{currentRow,currentCol});
-//                if(!teslaCoordinates.containsKey(Math.round(tesla - 3)))
-//                    teslaCoordinates.put(Math.round(tesla - 3),new int[]{currentRow,currentCol});
-//                if(!teslaCoordinates.containsKey(Math.round(tesla - 4)))
-//                    teslaCoordinates.put(Math.round(tesla - 4),new int[]{currentRow,currentCol});
-//                if(!teslaCoordinates.containsKey(Math.round(tesla - 5)))
-//                    teslaCoordinates.put(Math.round(tesla - 5),new int[]{currentRow,currentCol});
+//                if(teslaCoordinates.get(Math.round(tesla)) == null) {
+//                    teslaCoordinates.put(Math.round(tesla),new int[]{currentRow,currentCol});
+//                }
             }
         });
         stopMapping.setOnClickListener(new View.OnClickListener() {
@@ -199,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
                 isMapping = false;
                 mapToCell.setEnabled(true);
                 stopMapping.setEnabled(false);
+                lastTeslaVal = 0.0;
             }
         });
 //        for(int i = 1; i < path.size() - 1; i++){
@@ -250,5 +186,73 @@ public class MainActivity extends AppCompatActivity {
         int x = (int) (t * (t + 3) / 2 - z);
         int y = (int) (z - t * (t + 1) / 2);
         return new int[]{x, y};
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            // Isolate the force of gravity with the low-pass filter.
+            gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
+            gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
+            gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
+        }
+        else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            // Reduce fluctuation with low-pass filter
+            magnetic[0] =  event.values[0];
+            magnetic[1] =  event.values[1];
+            magnetic[2] = event.values[2];
+
+            float[] R = new float[9];
+            float[] I = new float[9];
+            //get rotation matrix of the device
+            SensorManager.getRotationMatrix(R, I, gravity, magnetic);
+            float[] A_D = event.values.clone();
+            float[] A_W = new float[3];
+            A_W[0] = R[0] * A_D[0] + R[1] * A_D[1] + R[2] * A_D[2];
+            A_W[1] = R[3] * A_D[0] + R[4] * A_D[1] + R[5] * A_D[2];
+            A_W[2] = R[6] * A_D[0] + R[7] * A_D[1] + R[8] * A_D[2];
+            //calculate tesla value using the rotation matrix
+            tesla = Math.sqrt((A_W[0]*A_W[0]) + (A_W[1]*A_W[1]) + (A_W[2]*A_W[2]));
+            Log.d("Field", "\nX :" + A_W[0] + "\nY :" + A_W[1] + "\nZ :" + A_W[2] + "\nTesla :" + tesla);
+            if(isMapping){
+                if(teslaCoordinates.get(Math.round(tesla)) == null ) {
+                    if((Math.round(tesla) - lastTeslaVal) < 3 && (Math.round(tesla) - lastTeslaVal) > -3){
+                        Log.d("vals", "inserted the following values : \nTesla " + Math.round(tesla) + "\nRow " + currentRow + "\nColumn " + currentCol);
+                        teslaCoordinates.put(Math.round(tesla),new int[]{currentRow,currentCol});
+                        lastTeslaVal = Math.round(tesla);
+                    }
+                    else{
+                        teslaCoordinates.put(Math.round(tesla),new int[]{currentRow,currentCol});
+                        lastTeslaVal = Math.round(tesla);
+                    }
+
+                }
+            }
+        }
+        if(!isMapping){
+
+            int[] currentLoc = teslaCoordinates.get(Math.round(tesla));
+            if(currentLoc != null) {
+                Log.d("last known location", "last known location is " + lastKnownRow + " " + lastKnownCol);
+                if (lastKnownCol != 0 && lastKnownRow != 0 && lastKnownRow != currentLoc[0] && lastKnownCol != currentLoc[1]) {
+                    Log.d("Mapping", "the program is mapping ");
+                    CreateCell(R.drawable.square, lastKnownRow, lastKnownCol);
+                    CreateCell(R.drawable.square_path, currentLoc[0], currentLoc[1]);
+                    lastKnownRow = currentLoc[0];
+                    lastKnownCol = currentLoc[1];
+                }
+                else if(lastKnownCol == 0 && lastKnownRow == 0){
+                    lastKnownRow = currentLoc[0];
+                    lastKnownCol = currentLoc[1];
+                    CreateCell(R.drawable.square_path, currentLoc[0], currentLoc[1]);
+                }
+
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
     }
 }
