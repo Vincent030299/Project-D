@@ -71,8 +71,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Log.d("step", ""+ sensorEvent.values[0]);
             numOfSteps = numOfSteps + sensorEvent.values[0];
             stepCount.setText(String.valueOf(numOfSteps));
-//            if(numOfSteps == 5)
-            textToSpeech.speak("yup yup yup", TextToSpeech.QUEUE_FLUSH, null);
+            if (numOfSteps == 2) {
+                textToSpeech.speak(list.get(1), TextToSpeech.QUEUE_FLUSH, null);
+                meters.setText(list.get(1));
+            } else if(numOfSteps == 5){
+                textToSpeech.speak(list.get(2), TextToSpeech.QUEUE_FLUSH, null);
+                meters.setText(list.get(2));
+            } else if(numOfSteps == 6){
+                textToSpeech.speak("Yup finished Yup", TextToSpeech.QUEUE_FLUSH, null);
+                meters.setText("Done");
+            }
         }
     }
 
