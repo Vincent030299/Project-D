@@ -53,7 +53,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private final float alpha = (float) 0.8000;
     private float[] gravity = new float[3];
     private float[] magnetic = new float[3];
-    private ArrayList<int[]> lastKnownLocation = new ArrayList<>();
+    private TextView teslaText;
+    private boolean isFirstMapping = true;
+    private boolean isalreadyMapped = false;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -62,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         gridLayout = findViewById(R.id.grid_view);
         mapToCell = findViewById(R.id.map_to_cell);
         stopMapping = findViewById(R.id.stop_mapping);
+        teslaText = findViewById(R.id.teslaVal);
         stopMapping.setEnabled(false);
         gridLayout.setAlignmentMode(ALIGN_BOUNDS);
         gridLayout.setRowOrderPreserved(false);
@@ -213,40 +216,39 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             A_W[2] = R[6] * A_D[0] + R[7] * A_D[1] + R[8] * A_D[2];
             //calculate tesla value using the rotation matrix
             tesla = Math.sqrt((A_W[0]*A_W[0]) + (A_W[1]*A_W[1]) + (A_W[2]*A_W[2]));
+            teslaText.setText(String.valueOf(Math.round(tesla)));
             Log.d("Field", "\nX :" + A_W[0] + "\nY :" + A_W[1] + "\nZ :" + A_W[2] + "\nTesla :" + tesla);
             if(isMapping){
                 if(teslaCoordinates.get(Math.round(tesla)) == null ) {
                     if((Math.round(tesla) - lastTeslaVal) < 3 && (Math.round(tesla) - lastTeslaVal) > -3){
                         Log.d("vals", "inserted the following values : \nTesla " + Math.round(tesla) + "\nRow " + currentRow + "\nColumn " + currentCol);
+//                        Toast.makeText(getApplicationContext(),"Started mapping",Toast.LENGTH_SHORT).show();
                         teslaCoordinates.put(Math.round(tesla),new int[]{currentRow,currentCol});
                         lastTeslaVal = Math.round(tesla);
+                        isalreadyMapped = true;
                     }
                     else{
+//                        Toast.makeText(getApplicationContext(),"Started mapping",Toast.LENGTH_SHORT).show();
                         teslaCoordinates.put(Math.round(tesla),new int[]{currentRow,currentCol});
                         lastTeslaVal = Math.round(tesla);
+                        isalreadyMapped = true;
                     }
 
                 }
             }
         }
-        if(!isMapping){
+        if(!isMapping && isalreadyMapped){
 
             int[] currentLoc = teslaCoordinates.get(Math.round(tesla));
             if(currentLoc != null) {
                 Log.d("last known location", "last known location is " + lastKnownRow + " " + lastKnownCol);
-                if (lastKnownCol != 0 && lastKnownRow != 0 && lastKnownRow != currentLoc[0] && lastKnownCol != currentLoc[1]) {
+                if ( lastKnownRow != currentLoc[0] && lastKnownCol != currentLoc[1]) {
                     Log.d("Mapping", "the program is mapping ");
                     CreateCell(R.drawable.square, lastKnownRow, lastKnownCol);
                     CreateCell(R.drawable.square_path, currentLoc[0], currentLoc[1]);
                     lastKnownRow = currentLoc[0];
                     lastKnownCol = currentLoc[1];
                 }
-                else if(lastKnownCol == 0 && lastKnownRow == 0){
-                    lastKnownRow = currentLoc[0];
-                    lastKnownCol = currentLoc[1];
-                    CreateCell(R.drawable.square_path, currentLoc[0], currentLoc[1]);
-                }
-
             }
         }
     }
