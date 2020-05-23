@@ -2,6 +2,11 @@ package com.example.texttospeechprototype;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.widget.TextView;
@@ -10,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     TextView meters;
     TextToSpeech textToSpeech;
@@ -20,6 +25,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        final SensorManager sensorManager = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
+        final Sensor stepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
 
         list = new ArrayList<String>();
         list.add("2 steps forward");
@@ -39,5 +47,17 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        if(sensorEvent.sensor.getType() == Sensor.TYPE_STEP_DETECTOR){
+            textToSpeech.speak("YUP YUP YUP YUP", TextToSpeech.QUEUE_FLUSH, null);
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
     }
 }
