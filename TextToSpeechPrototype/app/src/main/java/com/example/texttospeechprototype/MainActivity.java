@@ -1,14 +1,20 @@
 package com.example.texttospeechprototype;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -17,24 +23,34 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    TextView meters;
+    private static final int PHYISCAL_ACTIVITY = 1;
+    TextView meters,stepCount;
     TextToSpeech textToSpeech;
     List<String> list;
+    double numOfSteps = 0.0;
 
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        if(ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_DENIED){
+            //ask for permission
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, PHYISCAL_ACTIVITY);
+            }
+        }
         final SensorManager sensorManager = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
         final Sensor stepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
-
+        sensorManager.registerListener((SensorEventListener) this,stepDetector,SensorManager.SENSOR_DELAY_NORMAL);
         list = new ArrayList<String>();
         list.add("2 steps forward");
         list.add("Turn left and walk 3 steps forward");
         list.add("Turn right and walk 1 step forward");
 
         meters = findViewById(R.id.meters);
+        stepCount = findViewById(R.id.steps_count);
 
         meters.setText(list.get(0));
 
@@ -52,7 +68,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         if(sensorEvent.sensor.getType() == Sensor.TYPE_STEP_DETECTOR){
-            textToSpeech.speak("YUP YUP YUP YUP", TextToSpeech.QUEUE_FLUSH, null);
+            Log.d("step", ""+ sensorEvent.values[0]);
+            numOfSteps = numOfSteps + sensorEvent.values[0];
+            stepCount.setText(String.valueOf(numOfSteps));
+//            if(numOfSteps == 5)
+            textToSpeech.speak("yup yup yup", TextToSpeech.QUEUE_FLUSH, null);
         }
     }
 
