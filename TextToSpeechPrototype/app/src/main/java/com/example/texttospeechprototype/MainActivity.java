@@ -45,9 +45,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         final Sensor stepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         sensorManager.registerListener((SensorEventListener) this,stepDetector,SensorManager.SENSOR_DELAY_NORMAL);
         list = new ArrayList<String>();
-        list.add("2 steps forward");
-        list.add("Turn left and walk 3 steps forward");
-        list.add("Turn right and walk 1 step forward");
+        list.add("Walk 5 steps forward");
+        list.add("Turn left and walk 10 steps forward");
+        list.add("Turn right and walk 10 steps forward");
 
         meters = findViewById(R.id.meters);
         stepCount = findViewById(R.id.steps_count);
@@ -71,15 +71,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Log.d("step", ""+ sensorEvent.values[0]);
             numOfSteps = numOfSteps + sensorEvent.values[0];
             stepCount.setText(String.valueOf(numOfSteps));
-            if (numOfSteps == 2) {
-                textToSpeech.speak(list.get(1), TextToSpeech.QUEUE_FLUSH, null);
-                meters.setText(list.get(1));
-            } else if(numOfSteps == 5){
-                textToSpeech.speak(list.get(2), TextToSpeech.QUEUE_FLUSH, null);
-                meters.setText(list.get(2));
-            } else if(numOfSteps == 6){
-                textToSpeech.speak("Yup finished Yup", TextToSpeech.QUEUE_FLUSH, null);
-                meters.setText("Done");
+            switch((int) numOfSteps){
+                case 5:
+                    textToSpeech.speak(list.get(1), TextToSpeech.QUEUE_FLUSH, null);
+                    meters.setText(list.get(1));
+                    break;
+                case 15:
+                    textToSpeech.speak(list.get(2), TextToSpeech.QUEUE_FLUSH, null);
+                    meters.setText(list.get(2));
+                    break;
+                case 25:
+                    textToSpeech.speak("Finished", TextToSpeech.QUEUE_FLUSH, null);
+                    meters.setText("Done");
+                    break;
+                default:
+                    break;
             }
         }
     }
