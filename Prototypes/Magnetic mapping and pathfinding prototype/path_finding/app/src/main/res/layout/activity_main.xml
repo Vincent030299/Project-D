@@ -23,21 +23,21 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/grid_view"
-        android:text="Start Mapping"
-        android:id="@+id/map_to_cell"/>
+        android:text="Save map"
+        android:id="@+id/save_map"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/grid_view"
-        android:text="Stop Mapping"
-        android:id="@+id/stop_mapping"/>
+        android:text="Start mapping"
+        android:id="@+id/start_mapping"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/teslaVal"
         app:layout_constraintTop_toBottomOf="@id/grid_view"
-        app:layout_constraintStart_toEndOf="@id/stop_mapping"
-        app:layout_constraintEnd_toStartOf="@id/map_to_cell"/>
+        app:layout_constraintStart_toEndOf="@id/start_mapping"
+        app:layout_constraintEnd_toStartOf="@id/save_map"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
