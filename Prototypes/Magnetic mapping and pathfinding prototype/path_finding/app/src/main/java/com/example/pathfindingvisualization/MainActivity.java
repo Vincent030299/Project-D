@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -18,8 +19,10 @@ import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.GridLayout;
+import android.widget.GridLayout.LayoutParams;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -34,20 +37,24 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static android.widget.GridLayout.ALIGN_BOUNDS;
+import static android.widget.GridLayout.BASELINE;
+import static android.widget.GridLayout.CENTER;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener{
-    GridLayout gridLayout;
-    List<CustomNode> path;
-    int currentRow,currentCol;
-    int lastKnownRow = 10000,lastKnownCol = 10000;
+    private GridLayout gridLayout;
+    private List<CustomNode> path;
+    private int currentRow,currentCol;
+    private int lastKnownRow = 10000,lastKnownCol = 10000;
     double squarewidth;
     double height,width;
     private float azimuth,pitch,roll;
     private HashMap<Long,int[]> teslaCoordinates = new HashMap<>();
     private float[] floatOrientationMatrix = new float[9];
     private Button saveMap,startMapping;
-    double tesla,lastTeslaVal;
+    private double tesla;
+    private double lastTeslaVal = 0.0;
     private double stepsAmount = 0.0;
     private boolean isMapping = false;
     private final float alpha = (float) 0.8000;
@@ -63,20 +70,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //initializing views and variables
         gridLayout = findViewById(R.id.grid_view);
         saveMap = findViewById(R.id.save_map);
         startMapping = findViewById(R.id.start_mapping);
         teslaText = findViewById(R.id.teslaVal);
-        gridLayout.setAlignmentMode(ALIGN_BOUNDS);
+        int rows = 30;
+        int cols = 16;
+        //setting up grid layout
         gridLayout.setRowOrderPreserved(false);
+        gridLayout.setRotationX(180.0f);
+        gridLayout.requestLayout();
+        //Calculating the right width and height of a cell
         DisplayMetrics displaymetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-        double areaOfSquare = (displaymetrics.heightPixels * displaymetrics.widthPixels)/600.0;
-        squarewidth = Math.sqrt(areaOfSquare);
+        height = (double) ((displaymetrics.heightPixels*0.88) /rows);
+        width = (double) (displaymetrics.widthPixels*0.99/cols);
+        //setting up astar array and blocks array
         CustomNode initialNode = new CustomNode(4, 0);
         CustomNode finalNode = new CustomNode(23, 13);
-        int rows = 30;
-        int cols = 20;
         Astar aStar = new Astar(rows, cols, initialNode, finalNode);
         blocksArray = getIntent().getExtras().getParcelableArrayList("blocks");
         dbHelper = new DatabaseHelper(getApplicationContext());
@@ -96,22 +108,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 CreateCell(R.drawable.square,i,j);
             }
         }
+        //drawing blocks
         for(int i = 0; i < blocksArray.size();i++){
             int[] coordinates = DepairNumber(blocksArray.get(i));
             CreateCell(R.drawable.square_block,coordinates[0],coordinates[1]);
         }
-
-
+        //initializing sensors
         final SensorManager sensorManager = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
         final Sensor magnetometerReading = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         final Sensor stepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         final Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-        lastTeslaVal = 0.0;
         sensorManager.registerListener((SensorEventListener) this,magnetometerReading,SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener((SensorEventListener) this,stepDetector,SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener((SensorEventListener) this,accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
+        //saving magnetic mappings
         saveMap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -128,6 +140,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //                }
             }
         });
+        //start or stop mapping magnetic values
         startMapping.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -146,6 +159,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //            CreateCell(R.drawable.square_path,path.get(i).getRow(),path.get(i).getCol());
 //        }
     }
+    //draw cell
     private void CreateCell(int img, final int row, final int col){
         ImageView oImageView = new ImageView(this);
         oImageView.setOnClickListener(new View.OnClickListener() {
@@ -155,9 +169,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 currentRow = row;
             }
         });
-        GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams();
-        layoutParams.width = (int) Math.round(squarewidth);
-        layoutParams.height = (int) Math.round(squarewidth);
+        LayoutParams layoutParams = new LayoutParams();
+        layoutParams.width = (int) width;
+        layoutParams.height = (int) height;
         layoutParams.columnSpec = GridLayout.spec(col);
         layoutParams.rowSpec = GridLayout.spec(row);
         layoutParams.setMargins(0,0,0,0);
@@ -165,6 +179,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         oImageView.setLayoutParams(layoutParams);
         gridLayout.addView(oImageView);
     }
+
+    //cantor pairing function
     private static double UniqueNumber(int a,int b){
         //Cantors pairing function only works for positive integers
         if (a > -1 || b > -1) {
@@ -186,29 +202,38 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             return -1; //Otherwise return rouge value
         }
     }
+
+    //cantor depairing function
     private static int[] DepairNumber(double z){
         long t = (int) (Math.floor((Math.sqrt(8 * z + 1) - 1) / 2));
         int x = (int) (t * (t + 3) / 2 - z);
         int y = (int) (z - t * (t + 1) / 2);
         return new int[]{x, y};
     }
+    //px to dp converter
+    public float convertPxToDp(Context context, double px) {
+        return (float) (px / context.getResources().getDisplayMetrics().density);
+    }
 
+    //data from sensors is here
     @Override
     public void onSensorChanged(SensorEvent event) {
+        //getting accelerometer values
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             // Isolate the force of gravity with the low-pass filter.
             gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
             gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
             gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
         }
+        //getting magneto meter values
         else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-            // Reduce fluctuation with low-pass filter
             magnetic[0] =  event.values[0];
             magnetic[1] =  event.values[1];
             magnetic[2] = event.values[2];
 
             float[] R = new float[9];
             float[] I = new float[9];
+
             //get rotation matrix of the device
             SensorManager.getRotationMatrix(R, I, gravity, magnetic);
             float[] A_D = event.values.clone();
@@ -216,12 +241,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             A_W[0] = R[0] * A_D[0] + R[1] * A_D[1] + R[2] * A_D[2];
             A_W[1] = R[3] * A_D[0] + R[4] * A_D[1] + R[5] * A_D[2];
             A_W[2] = R[6] * A_D[0] + R[7] * A_D[1] + R[8] * A_D[2];
+
             //calculate tesla value using the rotation matrix
             tesla = Math.sqrt((A_W[0]*A_W[0]) + (A_W[1]*A_W[1]) + (A_W[2]*A_W[2]));
             teslaText.setText(String.valueOf(Math.round(tesla)));
             Log.d("Field", "\nX :" + A_W[0] + "\nY :" + A_W[1] + "\nZ :" + A_W[2] + "\nTesla :" + tesla);
             if(isMapping){
+                //check if the tesla value is mapped
                 if(teslaCoordinates.get(Math.round(tesla)) == null ) {
+                    //check if there are no big value fluctuations
                     if((Math.round(tesla) - lastTeslaVal) < 3 && (Math.round(tesla) - lastTeslaVal) > -3){
                         Log.d("vals", "inserted the following values : \nTesla " + Math.round(tesla) + "\nRow " + currentRow + "\nColumn " + currentCol);
 //                        Toast.makeText(getApplicationContext(),"Started mapping",Toast.LENGTH_SHORT).show();
@@ -229,7 +257,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         lastTeslaVal = Math.round(tesla);
                         isalreadyMapped = true;
                     }
-                    else{
+                    //if mapping the first value
+                    else if(lastTeslaVal == 0.0){
                         Log.d("vals", "inserted the following values : \nTesla " + Math.round(tesla) + "\nRow " + currentRow + "\nColumn " + currentCol);
 //                        Toast.makeText(getApplicationContext(),"Started mapping",Toast.LENGTH_SHORT).show();
                         teslaCoordinates.put(Math.round(tesla),new int[]{currentRow,currentCol});
@@ -240,8 +269,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
             }
         }
+        //when not mapping magnetic values
         if((!isMapping) && isalreadyMapped){
-
+            //keep track of last known location
             int[] currentLoc = teslaCoordinates.get(Math.round(tesla));
             if(currentLoc != null) {
                 Log.d("last known location", "last known location is " + lastKnownRow + " " + lastKnownCol);
