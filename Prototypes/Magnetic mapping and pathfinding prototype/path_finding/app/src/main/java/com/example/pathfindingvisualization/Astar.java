@@ -19,6 +19,7 @@ public class Astar {
     private Set<CustomNode> closedSet;
     private CustomNode initialNode;
     private CustomNode finalNode;
+    static String direction;
 
     public Astar(int rows, int cols, CustomNode initialNode, CustomNode finalNode, int hvCost, int diagonalCost) {
         this.hvCost = hvCost;
@@ -58,13 +59,13 @@ public class Astar {
         }
     }
 
-    public List<CustomNode> findPath() {
+    public List<CustomNode> findPath(String direction) {
         openList.add(initialNode);
         while (!isEmpty(openList)) {
             CustomNode currentNode = openList.poll();
             closedSet.add(currentNode);
             if (isFinalNode(currentNode)) {
-                return getPath(currentNode);
+                return getPath(currentNode,direction);
             } else {
                 addAdjacentNodes(currentNode);
             }
@@ -72,7 +73,7 @@ public class Astar {
         return new ArrayList<CustomNode>();
     }
 
-    private List<CustomNode> getPath(CustomNode currentNode) {
+    private List<CustomNode> getPath(CustomNode currentNode, String startdirection) {
         List<CustomNode> path = new ArrayList<CustomNode>();
         path.add(currentNode);
         CustomNode parent;
@@ -80,7 +81,148 @@ public class Astar {
             path.add(0, parent);
             currentNode = parent;
         }
+        Astar.direction = startdirection;
+        String currdirection  = "";
+        int xmeter = 0;
+        int ymeter = 0;
+        for (int i= 0; i < path.size(); i++) {
+            if (i == path.size() - 1) {
+                Log.d("test",getDirections(xmeter, ymeter));
+                break;
+            }
+            int xDif = path.get(i).x - path.get(i + 1).x;
+            int yDif = path.get(i).y - path.get(i+1).y;
+
+            if (xDif > 0){
+                if (!(currdirection == "E"))
+                {
+                    Log.d("test",getDirections(xmeter, ymeter));
+                    xmeter=ymeter=0;
+                }
+                xmeter += xDif;
+                currdirection = "E";
+            }
+            else if (xDif < 0){
+                if (!(currdirection == "W"))
+                {
+                    Log.d("test",getDirections(xmeter, ymeter));
+                    xmeter=ymeter=0;
+                }
+                xmeter += xDif;
+                currdirection = "W";
+            }
+            else if (yDif > 0){
+                if (!(currdirection == "N"))
+                {
+                    Log.d("test",getDirections(xmeter, ymeter));
+                    xmeter=ymeter=0;
+                }
+                ymeter += yDif;
+                currdirection = "N";
+            }
+            else if (yDif < 0){
+                if (!(currdirection == "S"))
+                {
+                    Log.d("test",getDirections(xmeter, ymeter));
+                    xmeter=ymeter=0;
+                }
+                ymeter += yDif;
+                currdirection = "S";
+            }
+
+
+        }
+
         return path;
+    }
+
+    public String getDirections(int xmeter, int ymeter) {
+        if(xmeter == 0 && ymeter == 0){
+            return "";
+        }
+        if(xmeter == 0){
+            switch(Astar.direction) {
+                case "N":
+                    if(ymeter > 0) {
+                        Astar.direction = "N";
+                        return("Walk " + Integer.toString(ymeter) + "Steps Forward" );
+                    } else {
+                        Astar.direction = "S";
+                        return("Walk " + Integer.toString(ymeter *-1) + "Steps Backwards" );
+                    }
+
+                case "E":
+                    if(ymeter > 0) {
+                        Astar.direction = "N";
+                        return("Walk " + Integer.toString(ymeter) + "Steps Left" );
+                    } else {
+                        Astar.direction = "S";
+                        return("Walk " + Integer.toString(ymeter * -1) + "Steps Right" );
+                    }
+
+                case "S":
+                    if(ymeter > 0) {
+                        Astar.direction = "N";
+                        return("Walk " + Integer.toString(ymeter) + "Steps Backwards" );
+                    } else {
+                        Astar.direction = "S";
+                        return("Walk " + Integer.toString(ymeter * -1) + "Steps Forwards" );
+                    }
+
+                case "W":
+                    if(ymeter > 0) {
+                        Astar.direction = "N";
+                        return("Walk " + Integer.toString(ymeter) + "Steps Right" );
+                    } else {
+                        Astar.direction = "S";
+                        return("Walk " + Integer.toString(ymeter * -1) + "Steps Left" );
+                    }
+
+            }
+        } else {
+            switch(Astar.direction) {
+                case "N":
+                    if(xmeter > 0) {
+                        Astar.direction = "O";
+                        return("Walk " + Integer.toString(xmeter) + "Steps Right" );
+                    } else {
+                        Astar.direction = "W";
+                        return("Walk " + Integer.toString(xmeter* -1) + "Steps Left" );
+                    }
+
+                case "E":
+                    if(xmeter > 0) {
+                        Astar.direction = "O";
+                        return("Walk " + Integer.toString(xmeter) + "Steps Forward" );
+                    } else {
+                        Astar.direction = "W";
+
+                        return("Walk " + Integer.toString(xmeter *-1) + "Steps Backwards" );
+                    }
+
+                case "S":
+                    if(xmeter > 0) {
+                        Astar.direction = "O";
+                        return("Walk " + Integer.toString(xmeter) + "Steps Left" );
+                    } else {
+                        Astar.direction = "W";
+                        return("Walk " + Integer.toString(xmeter * -1) + "Steps Right" );
+                    }
+
+                case "W":
+                    if(xmeter > 0) {
+                        Astar.direction = "O";
+                        return("Walk " + Integer.toString(xmeter) + "Steps Backwards" );
+                    } else {
+                        Astar.direction = "W";
+                        return("Walk " + Integer.toString(xmeter * -1) + "Steps Forward" );
+                    }
+
+
+            }
+
+        }
+        return"";
     }
 
     private void addAdjacentNodes(CustomNode currentNode) {
@@ -95,10 +237,10 @@ public class Astar {
         int lowerRow = row + 1;
         if (lowerRow < getSearchArea().length) {
             if (col - 1 >= 0) {
-                checkNode(currentNode, col - 1, lowerRow, getDiagonalCost()); // Comment this line if diagonal movements are not allowed
+                //checkNode(currentNode, col - 1, lowerRow, getDiagonalCost()); // Comment this line if diagonal movements are not allowed
             }
             if (col + 1 < getSearchArea()[0].length) {
-                checkNode(currentNode, col + 1, lowerRow, getDiagonalCost()); // Comment this line if diagonal movements are not allowed
+                //checkNode(currentNode, col + 1, lowerRow, getDiagonalCost()); // Comment this line if diagonal movements are not allowed
             }
             checkNode(currentNode, col, lowerRow, getHvCost());
         }
@@ -122,10 +264,10 @@ public class Astar {
         int upperRow = row - 1;
         if (upperRow >= 0) {
             if (col - 1 >= 0) {
-                checkNode(currentNode, col - 1, upperRow, getDiagonalCost()); // Comment this if diagonal movements are not allowed
+                //checkNode(currentNode, col - 1, upperRow, getDiagonalCost()); // Comment this if diagonal movements are not allowed
             }
             if (col + 1 < getSearchArea()[0].length) {
-                checkNode(currentNode, col + 1, upperRow, getDiagonalCost()); // Comment this if diagonal movements are not allowed
+                //checkNode(currentNode, col + 1, upperRow, getDiagonalCost()); // Comment this if diagonal movements are not allowed
             }
             checkNode(currentNode, col, upperRow, getHvCost());
         }

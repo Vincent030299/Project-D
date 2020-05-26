@@ -35,6 +35,8 @@ public class CreateMap extends AppCompatActivity {
         dbHelper = new DatabaseHelper(getApplicationContext());
         mapGrid.setAlignmentMode(ALIGN_BOUNDS);
         mapGrid.setRowOrderPreserved(false);
+        mapGrid.setRotationX(180.0f);
+        mapGrid.requestLayout();
         DisplayMetrics displaymetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
         double areaOfSquare = (displaymetrics.heightPixels * displaymetrics.widthPixels)/600.0;

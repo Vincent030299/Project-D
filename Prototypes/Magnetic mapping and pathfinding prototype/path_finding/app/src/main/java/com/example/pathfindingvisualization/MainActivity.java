@@ -69,36 +69,39 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         teslaText = findViewById(R.id.teslaVal);
         gridLayout.setAlignmentMode(ALIGN_BOUNDS);
         gridLayout.setRowOrderPreserved(false);
+        gridLayout.setRotationX(180.0f);
+        gridLayout.requestLayout();
         DisplayMetrics displaymetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
         double areaOfSquare = (displaymetrics.heightPixels * displaymetrics.widthPixels)/600.0;
         squarewidth = Math.sqrt(areaOfSquare);
-        CustomNode initialNode = new CustomNode(4, 0);
+        CustomNode initialNode = new CustomNode(0, 0);
         CustomNode finalNode = new CustomNode(23, 13);
         int rows = 30;
         int cols = 20;
         Astar aStar = new Astar(rows, cols, initialNode, finalNode);
         blocksArray = getIntent().getExtras().getParcelableArrayList("blocks");
         dbHelper = new DatabaseHelper(getApplicationContext());
-//        aStar.setBlocks(blocksArray);
-//        path = aStar.findPath();
+        int[][] blocksArray = new int[][]
+                {{7,1},{7,2},{7,3},{7,5},{7,6},{7,8},{7,9},{6,9},{5,9},{4,9},{3,9},{2,9},{1,9},{0,9},{0,15},{1,15},{2,15},{3,15},{4,15},{6,15},{7,15},{8,15},{9,15},{10,15},{11,15},{12,15},{13,15},{14,15},{15,15}};
+        aStar.setBlocks(blocksArray);
+        path = aStar.findPath("N");
         for(int i = 0; i < gridLayout.getRowCount();i++){
             for(int j = 0; j < gridLayout.getColumnCount();j++){
-//                if(i == initialNode.getRow() && j == initialNode.getCol()){
-//                    CreateCell(R.drawable.square_start,i,j);
-//                }
-//                else if(i == finalNode.getRow() && j == finalNode.getCol()){
-//                    CreateCell(R.drawable.square_end,i,j);
-//                }
-//                else{
-//                    CreateCell(R.drawable.square,i,j);
-//                }
+                if(i == initialNode.getRow() && j == initialNode.getCol()){
+                    CreateCell(R.drawable.square_start,i,j);
+                }
+                else if(i == finalNode.getRow() && j == finalNode.getCol()){
+                    CreateCell(R.drawable.square_end,i,j);
+                }
+                else{
+                    CreateCell(R.drawable.square,i,j);
+                }
                 CreateCell(R.drawable.square,i,j);
             }
         }
-        for(int i = 0; i < blocksArray.size();i++){
-            int[] coordinates = DepairNumber(blocksArray.get(i));
-            CreateCell(R.drawable.square_block,coordinates[0],coordinates[1]);
+        for(int i = 0; i < blocksArray.length;i++){
+            CreateCell(R.drawable.square_block,blocksArray[i][0],blocksArray[i][1]);
         }
 
 
@@ -142,9 +145,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
             }
         });
-//        for(int i = 1; i < path.size() - 1; i++){
-//            CreateCell(R.drawable.square_path,path.get(i).getRow(),path.get(i).getCol());
-//        }
+        for(int i = 1; i < path.size() - 1; i++){
+            CreateCell(R.drawable.square_path,path.get(i).getRow(),path.get(i).getCol());
+        }
     }
     private void CreateCell(int img, final int row, final int col){
         ImageView oImageView = new ImageView(this);
