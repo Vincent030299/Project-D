@@ -12,9 +12,9 @@ public class CustomNode {
     public int y;
     private boolean isBlock;
 
-    public CustomNode(int x, int y) {
-        this.x = x;
-        this.y = y;
+    public CustomNode(int row, int col) {
+        this.x = row;
+        this.y = col;
     }
     public void calculateHeuristic(CustomNode finalNode) {
         this.h = Math.abs(finalNode.getRow() - getRow()) + Math.abs(finalNode.getCol() - getCol());
