@@ -96,16 +96,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //        path = aStar.findPath();
         for(int i = 0; i < gridLayout.getRowCount();i++){
             for(int j = 0; j < gridLayout.getColumnCount();j++){
-//                if(i == initialNode.getRow() && j == initialNode.getCol()){
-//                    CreateCell(R.drawable.square_start,i,j);
-//                }
+                if(i == initialNode.getRow() && j == initialNode.getCol()){
+                    CreateCell(R.drawable.square_start,i,j);
+                }
+                else {
+                    CreateCell(R.drawable.square,i,j);
+                }
 //                else if(i == finalNode.getRow() && j == finalNode.getCol()){
 //                    CreateCell(R.drawable.square_end,i,j);
 //                }
 //                else{
 //                    CreateCell(R.drawable.square,i,j);
 //                }
-                CreateCell(R.drawable.square,i,j);
+
             }
         }
         //drawing blocks
