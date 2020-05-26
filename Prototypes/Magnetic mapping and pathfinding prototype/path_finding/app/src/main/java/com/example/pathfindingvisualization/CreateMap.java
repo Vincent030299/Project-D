@@ -25,29 +25,36 @@ public class CreateMap extends AppCompatActivity {
     private int rows, cols;
     private Button openMappingActivity;
     private DatabaseHelper dbHelper;
+    private double height,width;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.map_creator);
+        //initializing views and variables
         mapGrid = findViewById(R.id.map_create_grid);
         openMappingActivity = findViewById(R.id.go_to_map);
         dbHelper = new DatabaseHelper(getApplicationContext());
+        rows = 30;
+        cols = 16;
+        //setting up the grid layout
         mapGrid.setAlignmentMode(ALIGN_BOUNDS);
         mapGrid.setRowOrderPreserved(false);
         mapGrid.setRotationX(180.0f);
         mapGrid.requestLayout();
+        //calculating the right width and height of cells
         DisplayMetrics displaymetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-        double areaOfSquare = (displaymetrics.heightPixels * displaymetrics.widthPixels)/600.0;
-        squareWidth = Math.sqrt(areaOfSquare);
-        rows = 30;
-        cols = 16;
+        height = (double) ((displaymetrics.heightPixels*0.88) /rows);
+        width = (double) (displaymetrics.widthPixels*0.99/cols);
+
+        //drawing grid cells
         for(int i = 0; i < rows; i++){
             for(int j = 0; j < cols ; j++){
                 CreateCell(R.drawable.square,i,j);
             }
         }
+        //saving blocks
         openMappingActivity.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -65,6 +72,7 @@ public class CreateMap extends AppCompatActivity {
             }
         });
     }
+    //creating grid cell
     private void CreateCell(int img, final int row, final int col){
         ImageView oImageView = new ImageView(this);
         final double viewId = UniqueNumber(row,col);
@@ -82,8 +90,8 @@ public class CreateMap extends AppCompatActivity {
             }
         });
         GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams();
-        layoutParams.width = (int) Math.round(squareWidth);
-        layoutParams.height = (int) Math.round(squareWidth);
+        layoutParams.width = (int) width;
+        layoutParams.height = (int) height;
         layoutParams.columnSpec = GridLayout.spec(col);
         layoutParams.rowSpec = GridLayout.spec(row);
         layoutParams.setMargins(0,0,0,0);
@@ -91,6 +99,7 @@ public class CreateMap extends AppCompatActivity {
         oImageView.setLayoutParams(layoutParams);
         mapGrid.addView(oImageView);
     }
+    //cantor pairing function
     private static double UniqueNumber(int a,int b){
         //Cantors pairing function only works for positive integers
         if (a > -1 || b > -1) {
@@ -112,6 +121,7 @@ public class CreateMap extends AppCompatActivity {
             return -1; //Otherwise return rouge value
         }
     }
+    //cantor depairing function
     private static int[] DepairNumber(double z){
         long t = (int) (Math.floor((Math.sqrt(8 * z + 1) - 1) / 2));
         int x = (int) (t * (t + 3) / 2 - z);

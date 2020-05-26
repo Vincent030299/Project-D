@@ -12,7 +12,6 @@
         android:layout_gravity="center"
         android:columnCount="16"
         android:rowCount="30"
-        android:padding="5dp"
         app:layout_constraintHeight_percent="0.95"
         app:layout_constraintHeight_default="percent"
 
