@@ -28,15 +28,15 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.circuitwall.ml.algorithm.test.evolution.TestAlgorithm;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import static android.hardware.SensorManager.SENSOR_STATUS_ACCURACY_HIGH;
+import static android.hardware.SensorManager.SENSOR_STATUS_ACCURACY_LOW;
+import static android.hardware.SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM;
+import static android.hardware.SensorManager.SENSOR_STATUS_UNRELIABLE;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static android.widget.GridLayout.ALIGN_BOUNDS;
 import static android.widget.GridLayout.BASELINE;
@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private boolean isalreadyMapped = false;
     private ArrayList<? extends Double> blocksArray;
     private DatabaseHelper dbHelper;
+    private boolean isSensorReliable = true;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -87,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         height = (double) ((displaymetrics.heightPixels*0.88) /rows);
         width = (double) (displaymetrics.widthPixels*0.99/cols);
         //setting up astar array and blocks array
-        CustomNode initialNode = new CustomNode(4, 0);
+        CustomNode initialNode = new CustomNode(0, 4);
         CustomNode finalNode = new CustomNode(23, 13);
         Astar aStar = new Astar(rows, cols, initialNode, finalNode);
         blocksArray = getIntent().getExtras().getParcelableArrayList("blocks");
@@ -96,12 +97,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //        path = aStar.findPath();
         for(int i = 0; i < gridLayout.getRowCount();i++){
             for(int j = 0; j < gridLayout.getColumnCount();j++){
-                if(i == initialNode.getRow() && j == initialNode.getCol()){
-                    CreateCell(R.drawable.square_start,i,j);
-                }
-                else {
                     CreateCell(R.drawable.square,i,j);
-                }
 //                else if(i == finalNode.getRow() && j == finalNode.getCol()){
 //                    CreateCell(R.drawable.square_end,i,j);
 //                }
@@ -221,54 +217,56 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     //data from sensors is here
     @Override
     public void onSensorChanged(SensorEvent event) {
-        //getting accelerometer values
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            // Isolate the force of gravity with the low-pass filter.
-            gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-            gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-            gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
-        }
-        //getting magneto meter values
-        else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-            magnetic[0] =  event.values[0];
-            magnetic[1] =  event.values[1];
-            magnetic[2] = event.values[2];
+        if(isSensorReliable){
+            //getting accelerometer values
+            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                // Isolate the force of gravity with the low-pass filter.
+                gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
+                gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
+                gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
+            }
+            //getting magneto meter values
+            else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+                magnetic[0] =  event.values[0];
+                magnetic[1] =  event.values[1];
+                magnetic[2] = event.values[2];
 
-            float[] R = new float[9];
-            float[] I = new float[9];
+                float[] R = new float[9];
+                float[] I = new float[9];
 
-            //get rotation matrix of the device
-            SensorManager.getRotationMatrix(R, I, gravity, magnetic);
-            float[] A_D = event.values.clone();
-            float[] A_W = new float[3];
-            A_W[0] = R[0] * A_D[0] + R[1] * A_D[1] + R[2] * A_D[2];
-            A_W[1] = R[3] * A_D[0] + R[4] * A_D[1] + R[5] * A_D[2];
-            A_W[2] = R[6] * A_D[0] + R[7] * A_D[1] + R[8] * A_D[2];
+                //get rotation matrix of the device
+                SensorManager.getRotationMatrix(R, I, gravity, magnetic);
+                float[] A_D = event.values.clone();
+                float[] A_W = new float[3];
+                A_W[0] = R[0] * A_D[0] + R[1] * A_D[1] + R[2] * A_D[2];
+                A_W[1] = R[3] * A_D[0] + R[4] * A_D[1] + R[5] * A_D[2];
+                A_W[2] = R[6] * A_D[0] + R[7] * A_D[1] + R[8] * A_D[2];
 
-            //calculate tesla value using the rotation matrix
-            tesla = Math.sqrt((A_W[0]*A_W[0]) + (A_W[1]*A_W[1]) + (A_W[2]*A_W[2]));
-            teslaText.setText(String.valueOf(Math.round(tesla)));
-            Log.d("Field", "\nX :" + A_W[0] + "\nY :" + A_W[1] + "\nZ :" + A_W[2] + "\nTesla :" + tesla);
-            if(isMapping){
-                //check if the tesla value is mapped
-                if(teslaCoordinates.get(Math.round(tesla)) == null ) {
-                    //check if there are no big value fluctuations
-                    if((Math.round(tesla) - lastTeslaVal) < 3 && (Math.round(tesla) - lastTeslaVal) > -3){
-                        Log.d("vals", "inserted the following values : \nTesla " + Math.round(tesla) + "\nRow " + currentRow + "\nColumn " + currentCol);
+                //calculate tesla value using the rotation matrix
+                tesla = Math.sqrt((A_W[0]*A_W[0]) + (A_W[1]*A_W[1]) + (A_W[2]*A_W[2]));
+                teslaText.setText(String.valueOf(Math.round(tesla)));
+                Log.d("Field", "\nX :" + A_W[0] + "\nY :" + A_W[1] + "\nZ :" + A_W[2] + "\nTesla :" + tesla);
+                if(isMapping){
+                    //check if the tesla value is mapped
+                    if(teslaCoordinates.get(Math.round(tesla)) == null ) {
+                        //check if there are no big value fluctuations
+                        if((Math.round(tesla) - lastTeslaVal) < 2 && (Math.round(tesla) - lastTeslaVal) > -2){
+                            Log.d("vals", "inserted the following values : \nTesla " + Math.round(tesla) + "\nRow " + currentRow + "\nColumn " + currentCol);
 //                        Toast.makeText(getApplicationContext(),"Started mapping",Toast.LENGTH_SHORT).show();
-                        teslaCoordinates.put(Math.round(tesla),new int[]{currentRow,currentCol});
-                        lastTeslaVal = Math.round(tesla);
-                        isalreadyMapped = true;
-                    }
-                    //if mapping the first value
-                    else if(lastTeslaVal == 0.0){
-                        Log.d("vals", "inserted the following values : \nTesla " + Math.round(tesla) + "\nRow " + currentRow + "\nColumn " + currentCol);
+                            teslaCoordinates.put(Math.round(tesla),new int[]{currentRow,currentCol});
+                            lastTeslaVal = Math.round(tesla);
+                            isalreadyMapped = true;
+                        }
+                        //if mapping the first value
+                        else if(lastTeslaVal == 0.0){
+                            Log.d("vals", "inserted the following values : \nTesla " + Math.round(tesla) + "\nRow " + currentRow + "\nColumn " + currentCol);
 //                        Toast.makeText(getApplicationContext(),"Started mapping",Toast.LENGTH_SHORT).show();
-                        teslaCoordinates.put(Math.round(tesla),new int[]{currentRow,currentCol});
-                        lastTeslaVal = Math.round(tesla);
-                        isalreadyMapped = true;
-                    }
+                            teslaCoordinates.put(Math.round(tesla),new int[]{currentRow,currentCol});
+                            lastTeslaVal = Math.round(tesla);
+                            isalreadyMapped = true;
+                        }
 
+                    }
                 }
             }
         }
@@ -292,5 +290,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        if((sensor.getType() == Sensor.TYPE_ACCELEROMETER || sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) && (accuracy == SENSOR_STATUS_ACCURACY_LOW || accuracy == SENSOR_STATUS_UNRELIABLE)){
+            isSensorReliable = false;
+            Toast.makeText(getApplicationContext(),"Please calibrate your phone by moving it in an 8 shape",Toast.LENGTH_SHORT).show();
+        }
+        else if((sensor.getType() == Sensor.TYPE_ACCELEROMETER && accuracy == SENSOR_STATUS_ACCURACY_HIGH ) || ( sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD && accuracy == SENSOR_STATUS_ACCURACY_MEDIUM)){
+            isSensorReliable = true;
+        }
     }
 }

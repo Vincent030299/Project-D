@@ -3,6 +3,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    <ImageView android:id="@+id/floor_plan"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_gravity="center"
+        app:layout_constraintHeight_percent="0.95"
+        app:layout_constraintHeight_default="percent"
+
+        app:layout_constraintWidth_percent="1"
+        app:layout_constraintWidth_default="percent"
+        android:background="@drawable/my_room_floor_plan" />
+
     <GridLayout android:id="@+id/map_create_grid"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -18,6 +32,7 @@
 
         app:layout_constraintWidth_percent="1"
         app:layout_constraintWidth_default="percent"/>
+
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

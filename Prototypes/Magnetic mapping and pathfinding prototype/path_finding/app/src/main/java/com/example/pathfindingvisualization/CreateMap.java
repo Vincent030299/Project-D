@@ -45,7 +45,7 @@ public class CreateMap extends AppCompatActivity {
         //calculating the right width and height of cells
         DisplayMetrics displaymetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-        height = (double) ((displaymetrics.heightPixels*0.88) /rows);
+        height = (double) ((displaymetrics.heightPixels*0.87) /rows);
         width = (double) (displaymetrics.widthPixels*0.99/cols);
 
         //drawing grid cells
@@ -81,7 +81,7 @@ public class CreateMap extends AppCompatActivity {
             public void onClick(View v) {
                 if(blocks.contains(viewId)){
                     blocks.remove(viewId);
-                    CreateCell(R.drawable.square,row,col);
+                    CreateCell(R.drawable.square_white,row,col);
                 }
                 else if(!blocks.contains(viewId)){
                     blocks.add(viewId);
