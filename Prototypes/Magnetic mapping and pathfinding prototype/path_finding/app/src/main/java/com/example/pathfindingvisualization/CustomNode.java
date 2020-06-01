@@ -8,8 +8,8 @@ public class CustomNode {
     private int g;
     private int f;
     private int h;
-    private int x;
-    private int y;
+    public int x;
+    public int y;
     private boolean isBlock;
 
     public CustomNode(int row, int col) {

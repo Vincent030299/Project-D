@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         height = (double) ((displaymetrics.heightPixels*0.88) /rows);
         width = (double) (displaymetrics.widthPixels*0.99/cols);
         //setting up astar array and blocks array
-        CustomNode initialNode = new CustomNode(0, 4);
+        CustomNode initialNode = new CustomNode(4, 0);
         CustomNode finalNode = new CustomNode(23, 13);
         Astar aStar = new Astar(rows, cols, initialNode, finalNode);
         blocksArray = getIntent().getExtras().getParcelableArrayList("blocks");
