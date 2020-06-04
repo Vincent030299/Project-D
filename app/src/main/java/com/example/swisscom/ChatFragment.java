@@ -2,6 +2,7 @@ package com.example.swisscom;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -21,6 +22,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomnavigation.BottomNavigationMenu;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -120,6 +122,22 @@ public class ChatFragment extends Fragment {
                              }
                 );
 
+                recyclerView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                    @Override
+                    public void onLayoutChange(View v,
+                                               int left, int top, int right, int bottom,
+                                               int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                        if (bottom < oldBottom) {
+                            recyclerView.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    recyclerView.smoothScrollToPosition(
+                                            recyclerView.getAdapter().getItemCount() - 1);
+                                }
+                            }, 100);
+                        }
+                    }
+                });
             }
         });
 
