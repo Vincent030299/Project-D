@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new StoreFragment()).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new StoreFragment("OPPO Find X2 Pro")).commit();
         BottomNavigationView bottom_nav = findViewById(R.id.bottom_nav);
         bottom_nav.setOnNavigationItemSelectedListener(nav_listener);
 
@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
 
                     switch (item.getItemId()){
                         case R.id.nav_store:
-                            selected_fragment = new StoreFragment();
+                            selected_fragment = new StoreFragment("OPPO Find X2 Pro");
                             break;
                         case R.id.nav_catalog:
                             selected_fragment = new CatalogFragment();

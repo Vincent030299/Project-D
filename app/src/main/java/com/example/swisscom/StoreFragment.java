@@ -9,6 +9,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +25,7 @@ import java.security.Provider;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import static android.hardware.SensorManager.SENSOR_STATUS_ACCURACY_HIGH;
 import static android.hardware.SensorManager.SENSOR_STATUS_ACCURACY_LOW;
@@ -40,16 +42,24 @@ public class StoreFragment extends Fragment implements SensorEventListener {
     private int currentPos = R.drawable.current_pos;
     private GridLayout storeMap;
     int width,height;
-    private ArrayList<Double> blocksArray = new ArrayList<>();
+    private ArrayList<int[]> blocksArray = new ArrayList<>();
     private HashMap<Long,int[]> teslaMappings = new HashMap<>();
     private boolean locationFound = false;
+    private String productName;
+    private int[] startingLocation = new int[2];
+    private CustomNode initialNode;
+    private List<CustomNode> path;
+    public StoreFragment(String productName) {
+        this.productName = productName;
+    }
 
     @Nullable
     public View onCreateView(@NonNull LayoutInflater inflater, @NonNull ViewGroup container, @NonNull Bundle savedInstanceState) {
         getActivity().setTitle("Swisscom");
         View view = inflater.inflate(R.layout.fragment_store, container, false);
         storeMap = view.findViewById(R.id.map_grid);
-
+        int rows = 30;
+        int cols = 30;
         DisplayMetrics displaymetrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
         height = (int) ((displaymetrics.heightPixels*0.86) /30);
@@ -63,7 +73,7 @@ public class StoreFragment extends Fragment implements SensorEventListener {
         Cursor blocks = db.getBlocks();
         Cursor magneticMappings = db.getMappings();
         while (blocks.moveToNext()){
-            blocksArray.add(Double.parseDouble(blocks.getString(0)));
+            blocksArray.add(DepairNumber(Double.parseDouble(blocks.getString(0))));
         }
         while (magneticMappings.moveToNext()){
             teslaMappings.put(Long.parseLong(magneticMappings.getString(0)),new int[]{Integer.parseInt(magneticMappings.getString(1)),Integer.parseInt(magneticMappings.getString(2))});
@@ -73,6 +83,7 @@ public class StoreFragment extends Fragment implements SensorEventListener {
                     CreateCell(R.drawable.cell_placeholder,i,j,width,height);
             }
         }
+
 
         //testing drawables. Should be deleted when pathfinding is implemented
         CreateCell(R.drawable.current_pos,5,5,50,50);
@@ -124,7 +135,13 @@ public class StoreFragment extends Fragment implements SensorEventListener {
                 //detects user's current location
                 if(!locationFound){
                     if(teslaMappings.containsKey(Math.round(tesla))){
-                        CreateCell(currentPos,teslaMappings.get(Math.round(tesla))[0],teslaMappings.get(Math.round(tesla))[1],50,50);
+                        startingLocation = teslaMappings.get(Math.round(tesla));
+                        initialNode = new CustomNode(startingLocation[0],startingLocation[1]);
+                        Astar aStar = new Astar(30, 16, initialNode, productName);
+                        aStar.setBlocks(blocksArray);
+                        path = aStar.findPath("N");
+                        Log.d("test",path.toString());
+                        CreateCell(currentPos,startingLocation[0],startingLocation[1],50,50);
                         locationFound = true;
                     }
                 }

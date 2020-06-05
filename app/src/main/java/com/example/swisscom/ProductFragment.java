@@ -1,5 +1,6 @@
 package com.example.swisscom;
 
+import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -28,7 +29,7 @@ public class ProductFragment extends Fragment {
     private int lastKnownRow = 10000,lastKnownCol = 10000;
     double squarewidth;
     double height,width;
-    private ArrayList<? extends Double> blocksArray;
+    private ArrayList<Double> blocksArray = new ArrayList<>();
 
     @Nullable
     public View onCreateView(@NonNull LayoutInflater inflater, @NonNull ViewGroup container, @NonNull Bundle savedInstanceState) {
@@ -46,16 +47,7 @@ public class ProductFragment extends Fragment {
         pathfinding.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int rows = 30;
-                int cols = 16;
-                CustomNode initialNode = new CustomNode(1, 12);
-                CustomNode finalNode = new CustomNode(11, 11);
-                Astar aStar = new Astar(rows, cols, initialNode, productName);
-                int[][] blocksArray = new int[][]
-                        {{2,11},{3,11},{4,11},{2,12},{3,12},{4,12},{8,11},{9,11},{10,11},{8,12},{9,12},{10,12},{15,4},{14,4},{13,4},{12,4},{11,4},{0,7},{1,7},{2,7},{3,7},{4,7},{5,7},{6,7},{7,7},{8,7},{9,7},{10,7},{10,6},{10,5},{10,4},{16,4},{16,5},{16,6},{16,7},{16,8},{16,9},{16,10},{16,11},{16,12},{16,13},{16,14},{16,15}};;
-                aStar.setBlocks(blocksArray);
-                path = aStar.findPath("N");
-                Log.d("test",path.toString());
+                getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new StoreFragment(productName)).commit();
             }
         });
 

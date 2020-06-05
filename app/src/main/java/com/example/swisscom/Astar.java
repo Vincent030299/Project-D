@@ -64,10 +64,10 @@ public class Astar {
         }
     }
 
-    public void setBlocks(int[][] blocksArray) {
-        for (int i = 0; i < blocksArray.length; i++) {
-            int row = blocksArray[i][0];
-            int col = blocksArray[i][1];
+    public void setBlocks(ArrayList<int[]> blocksArray ) {
+        for (int i = 0; i < blocksArray.size(); i++) {
+            int row = blocksArray.get(i)[0];
+            int col = blocksArray.get(i)[1];
             setBlock(row, col);
         }
     }
