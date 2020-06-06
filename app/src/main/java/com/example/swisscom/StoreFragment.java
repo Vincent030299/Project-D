@@ -1,12 +1,16 @@
 package com.example.swisscom;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -19,6 +23,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import java.security.Provider;
@@ -34,6 +39,7 @@ import static android.hardware.SensorManager.SENSOR_STATUS_UNRELIABLE;
 import static android.view.Gravity.CENTER;
 
 public class StoreFragment extends Fragment implements SensorEventListener {
+    private static final int PHYISCAL_ACTIVITY = 1;
     private float[] gravity = new float[3];
     private float[] magnetic = new float[3];
     private double tesla;
@@ -51,6 +57,8 @@ public class StoreFragment extends Fragment implements SensorEventListener {
     private List<CustomNode> path;
     private int pathDrawable = R.drawable.path_cell;
     private int destinationCell = R.drawable.destination_cell;
+    private ArrayList<String> directions;
+    TextToSpeech textToSpeech;
     public StoreFragment(String productName) {
         this.productName = productName;
     }
@@ -60,6 +68,13 @@ public class StoreFragment extends Fragment implements SensorEventListener {
         getActivity().setTitle("Swisscom");
         View view = inflater.inflate(R.layout.fragment_store, container, false);
         storeMap = view.findViewById(R.id.map_grid);
+        if(ContextCompat.checkSelfPermission(this.getContext(),
+                Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_DENIED){
+            //ask for permission
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, PHYISCAL_ACTIVITY);
+            }
+        }
         int rows = 30;
         int cols = 30;
         DisplayMetrics displaymetrics = new DisplayMetrics();
@@ -86,24 +101,14 @@ public class StoreFragment extends Fragment implements SensorEventListener {
             }
         }
 
-
-        //testing drawables. Should be deleted when pathfinding is implemented
-        CreateCell(R.drawable.current_pos,5,5,50,50);
-        CreateCell(R.drawable.destination_cell,5,12,50,50);
-        CreateCell(R.drawable.path_cell,5,6,40,40);
-        CreateCell(R.drawable.path_cell,5,7,40,40);
-        CreateCell(R.drawable.path_cell,5,8,40,40);
-        CreateCell(R.drawable.path_cell,5,9,40,40);
-        CreateCell(R.drawable.path_cell,5,10,40,40);
-        CreateCell(R.drawable.path_cell,5,11,40,40);
-
         SensorManager sensorManager = (SensorManager) this.getContext().getSystemService(Context.SENSOR_SERVICE);
         final Sensor magnetometerReading = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         final Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        final Sensor stepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         sensorManager.registerListener(this,magnetometerReading,SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this,accelerometer,SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this,stepDetector,SensorManager.SENSOR_DELAY_NORMAL);
         return view;
-
     }
 
 
@@ -143,7 +148,8 @@ public class StoreFragment extends Fragment implements SensorEventListener {
                         aStar.setBlocks(blocksArray);
                         path = aStar.findPath("N");
 
-                        Log.d("test",path.toString());
+                        directions = aStar.getStringDirections();
+                        Log.d("test",directions.toString());
                         CreateCell(currentPos,startingLocation[0],startingLocation[1],50,50);
                         for(int i = 1; i < path.size() - 1;i++){
                             CreateCell(pathDrawable,path.get(i).getRow(),path.get(i).getCol(),40,40);
@@ -152,6 +158,9 @@ public class StoreFragment extends Fragment implements SensorEventListener {
                         locationFound = true;
                     }
                 }
+
+            }
+            else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR){
 
             }
         }
