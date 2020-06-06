@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import static android.hardware.SensorManager.SENSOR_STATUS_ACCURACY_HIGH;
 import static android.hardware.SensorManager.SENSOR_STATUS_ACCURACY_LOW;
@@ -43,6 +44,7 @@ public class StoreFragment extends Fragment implements SensorEventListener {
     private float[] gravity = new float[3];
     private float[] magnetic = new float[3];
     private double tesla;
+    private double numOfSteps;
     private final float alpha = (float) 0.8000;
     private boolean isSensorReliable = true;
     private int currentPos = R.drawable.current_pos;
@@ -58,6 +60,7 @@ public class StoreFragment extends Fragment implements SensorEventListener {
     private int pathDrawable = R.drawable.path_cell;
     private int destinationCell = R.drawable.destination_cell;
     private ArrayList<String> directions;
+    private int i = 1;
     TextToSpeech textToSpeech;
     public StoreFragment(String productName) {
         this.productName = productName;
@@ -108,6 +111,7 @@ public class StoreFragment extends Fragment implements SensorEventListener {
         sensorManager.registerListener(this,magnetometerReading,SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this,accelerometer,SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this,stepDetector,SensorManager.SENSOR_DELAY_NORMAL);
+
         return view;
     }
 
@@ -146,7 +150,7 @@ public class StoreFragment extends Fragment implements SensorEventListener {
                         initialNode = new CustomNode(startingLocation[0],startingLocation[1]);
                         Astar aStar = new Astar(30, 16, initialNode, productName);
                         aStar.setBlocks(blocksArray);
-                        path = aStar.findPath("N");
+                        path = aStar.findPath("W");
 
                         directions = aStar.getStringDirections();
                         Log.d("test",directions.toString());
@@ -161,7 +165,14 @@ public class StoreFragment extends Fragment implements SensorEventListener {
 
             }
             else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR){
-
+                numOfSteps = numOfSteps + event.values[0];
+                while(i < directions.size()){
+                    String number = directions.get(i).replaceAll("\\D+","");
+                    if (numOfSteps == Integer.valueOf(number)) {
+                        textToSpeech.speak(directions.get(i), TextToSpeech.QUEUE_FLUSH, null);
+                        i++;
+                    }
+                }
             }
         }
     }

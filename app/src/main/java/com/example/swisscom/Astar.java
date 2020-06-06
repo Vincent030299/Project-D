@@ -87,6 +87,7 @@ public class Astar {
     }
 
     public ArrayList<String> getStringDirections(){
+        stringDirections.remove("");
         return stringDirections;
     }
 
@@ -168,8 +169,8 @@ public class Astar {
     }
 
     public String getDirections(int cold, int rowd) {
-        double col = (double) cold;
-        double row = (double) rowd;
+        int col = cold;
+        int row = rowd;
         if(cold == 0 && rowd == 0){
             return "";
         }
@@ -181,34 +182,34 @@ public class Astar {
                         return("Walk " + String.valueOf(row / 2) + " Steps Forward" );
                     } else {
                         Astar.direction = "S";
-                        return("Walk " + String.valueOf(row / 2 *-1) + "Steps Backwards" );
+                        return("Walk " + String.valueOf(row / 2 *-1) + " Steps Backwards" );
                     }
 
                 case "E":
                     if(rowd > 0) {
                         Astar.direction = "N";
-                        return("Walk " + String.valueOf(row / 2) + "Steps Left" );
+                        return("Walk " + String.valueOf(row / 2) + " Steps Left" );
                     } else {
                         Astar.direction = "S";
-                        return("Walk " + String.valueOf(row / 2 *-1) + "Steps Right" );
+                        return("Walk " + String.valueOf(row / 2 *-1) + " Steps Right" );
                     }
 
                 case "S":
                     if(rowd > 0) {
                         Astar.direction = "N";
-                        return("Walk " + String.valueOf(row / 2) + "Steps Backwards" );
+                        return("Walk " + String.valueOf(row / 2) + " Steps Backwards" );
                     } else {
                         Astar.direction = "S";
-                        return("Walk " + String.valueOf(row / 2 *-1) + "Steps Forwards" );
+                        return("Walk " + String.valueOf(row / 2 *-1) + " Steps Forwards" );
                     }
 
                 case "W":
                     if(rowd > 0) {
                         Astar.direction = "N";
-                        return("Walk " + String.valueOf(row / 2) + "Steps Right" );
+                        return("Walk " + String.valueOf(row / 2) + " Steps Right" );
                     } else {
                         Astar.direction = "S";
-                        return("Walk " + String.valueOf(row / 2 *-1) + "Steps Left" );
+                        return("Walk " + String.valueOf(row / 2 *-1) + " Steps Left" );
                     }
 
             }
@@ -217,38 +218,38 @@ public class Astar {
                 case "N":
                     if(cold > 0) {
                         Astar.direction = "E";
-                        return("Walk " + String.valueOf(col / 2) + "Steps Right" );
+                        return("Walk " + String.valueOf(col / 2) + " Steps Right" );
                     } else {
                         Astar.direction = "W";
-                        return("Walk " + String.valueOf(col / 2 * -1) + "Steps Left" );
+                        return("Walk " + String.valueOf(col / 2 * -1) + " Steps Left" );
                     }
 
                 case "E":
                     if(cold > 0) {
                         Astar.direction = "E";
-                        return("Walk " + String.valueOf(col / 2) + "Steps Forward" );
+                        return("Walk " + String.valueOf(col / 2) + " Steps Forward" );
                     } else {
                         Astar.direction = "W";
 
-                        return("Walk " + String.valueOf(col / 2 * -1) + "Steps Backwards" );
+                        return("Walk " + String.valueOf(col / 2 * -1) + " Steps Backwards" );
                     }
 
                 case "S":
                     if(cold > 0) {
                         Astar.direction = "E";
-                        return("Walk " + String.valueOf(col / 2) + "Steps Left" );
+                        return("Walk " + String.valueOf(col / 2) + " Steps Left" );
                     } else {
                         Astar.direction = "W";
-                        return("Walk " + String.valueOf(col / 2 * -1) + "Steps Right" );
+                        return("Walk " + String.valueOf(col / 2 * -1) + " Steps Right" );
                     }
 
                 case "W":
                     if(cold > 0) {
                         Astar.direction = "E";
-                        return("Walk " + String.valueOf(col / 2) + "Steps Backwards" );
+                        return("Walk " + String.valueOf(col / 2) + " Steps Backwards" );
                     } else {
                         Astar.direction = "W";
-                        return("Walk " + String.valueOf(col / 2 * -1) + "Steps Forward" );
+                        return("Walk " + String.valueOf(col / 2 * -1) + " Steps Forward" );
                     }
 
 
