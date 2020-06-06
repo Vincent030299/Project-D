@@ -49,6 +49,8 @@ public class StoreFragment extends Fragment implements SensorEventListener {
     private int[] startingLocation = new int[2];
     private CustomNode initialNode;
     private List<CustomNode> path;
+    private int pathDrawable = R.drawable.path_cell;
+    private int destinationCell = R.drawable.destination_cell;
     public StoreFragment(String productName) {
         this.productName = productName;
     }
@@ -140,8 +142,13 @@ public class StoreFragment extends Fragment implements SensorEventListener {
                         Astar aStar = new Astar(30, 16, initialNode, productName);
                         aStar.setBlocks(blocksArray);
                         path = aStar.findPath("N");
+
                         Log.d("test",path.toString());
                         CreateCell(currentPos,startingLocation[0],startingLocation[1],50,50);
+                        for(int i = 1; i < path.size() - 1;i++){
+                            CreateCell(pathDrawable,path.get(i).getRow(),path.get(i).getCol(),40,40);
+                        }
+                        CreateCell(destinationCell,path.get(path.size() -1).getRow(),path.get(path.size() - 1).getCol(),50,50);
                         locationFound = true;
                     }
                 }
