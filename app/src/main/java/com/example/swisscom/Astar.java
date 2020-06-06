@@ -74,6 +74,7 @@ public class Astar {
 
     public List<CustomNode> findPath(String direction) {
         openList.add(initialNode);
+        stringDirections.clear();
         while (!isEmpty(openList)) {
             CustomNode currentNode = openList.poll();
             closedSet.add(currentNode);

@@ -59,9 +59,13 @@ public class StoreFragment extends Fragment implements SensorEventListener {
     private List<CustomNode> path;
     private int pathDrawable = R.drawable.path_cell;
     private int destinationCell = R.drawable.destination_cell;
-    private ArrayList<String> directions;
+    private ArrayList<String> directions = new ArrayList<String>();
     private int i = 1;
-    TextToSpeech textToSpeech;
+    private TextToSpeech textToSpeech;
+    private int[] currentLocation;
+    private boolean reachedDestination = false;
+    private boolean stepDetectorIsReliable = true;
+
     public StoreFragment(String productName) {
         this.productName = productName;
     }
@@ -71,13 +75,8 @@ public class StoreFragment extends Fragment implements SensorEventListener {
         getActivity().setTitle("Swisscom");
         View view = inflater.inflate(R.layout.fragment_store, container, false);
         storeMap = view.findViewById(R.id.map_grid);
-        if(ContextCompat.checkSelfPermission(this.getContext(),
-                Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_DENIED){
-            //ask for permission
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                requestPermissions(new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, PHYISCAL_ACTIVITY);
-            }
-        }
+        directions.clear();
+
         int rows = 30;
         int cols = 30;
         DisplayMetrics displaymetrics = new DisplayMetrics();
@@ -151,8 +150,20 @@ public class StoreFragment extends Fragment implements SensorEventListener {
                         Astar aStar = new Astar(30, 16, initialNode, productName);
                         aStar.setBlocks(blocksArray);
                         path = aStar.findPath("W");
-
                         directions = aStar.getStringDirections();
+                        textToSpeech = new TextToSpeech(this.getContext(), new TextToSpeech.OnInitListener() {
+                            @Override
+                            public void onInit(int i) {
+                                if (i != TextToSpeech.ERROR) {
+                                    textToSpeech.setLanguage(Locale.ENGLISH);
+                                    if(directions.size()>=1)
+                                        textToSpeech.speak(directions.get(0) + " and " + directions.get(1),TextToSpeech.QUEUE_FLUSH,null);
+                                    else
+                                        textToSpeech.speak("You have reached your destination",TextToSpeech.QUEUE_FLUSH,null);
+                                }
+                            }
+                        });
+
                         Log.d("test",directions.toString());
                         CreateCell(currentPos,startingLocation[0],startingLocation[1],50,50);
                         for(int i = 1; i < path.size() - 1;i++){
@@ -163,17 +174,29 @@ public class StoreFragment extends Fragment implements SensorEventListener {
                     }
                 }
 
+
             }
-            else if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR){
+            if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR){
                 numOfSteps = numOfSteps + event.values[0];
-                while(i < directions.size()){
-                    String number = directions.get(i).replaceAll("\\D+","");
-                    if (numOfSteps == Integer.valueOf(number)) {
-                        textToSpeech.speak(directions.get(i), TextToSpeech.QUEUE_FLUSH, null);
+                String number = directions.get(i).replaceAll("\\D+","");
+                Log.d("number", number);
+
+                if((i >= directions.size() - 1 && !reachedDestination) || (directions.size() == 0) ){
+                    textToSpeech.speak("You have reached your destination",TextToSpeech.QUEUE_FLUSH,null);
+                    reachedDestination = true;
+                }
+                if(!number.equals("")){
+                    if (numOfSteps == Integer.parseInt(number) && i < directions.size() - 1) {
+                        textToSpeech.speak(directions.get(i + 1), TextToSpeech.QUEUE_FLUSH, null);
                         i++;
                     }
                 }
+                if(number.equals("")){
+                    i++;
+                }
+
             }
+
         }
     }
 
@@ -182,6 +205,12 @@ public class StoreFragment extends Fragment implements SensorEventListener {
         if((sensor.getType() == Sensor.TYPE_ACCELEROMETER || sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) && (accuracy == SENSOR_STATUS_ACCURACY_LOW || accuracy == SENSOR_STATUS_UNRELIABLE)){
             isSensorReliable = false;
             Toast.makeText(this.getContext(),"Please calibrate your phone by moving it in an 8 shape",Toast.LENGTH_SHORT).show();
+        }
+        if(sensor.getType() == Sensor.TYPE_STEP_DETECTOR && accuracy == SENSOR_STATUS_ACCURACY_LOW){
+            stepDetectorIsReliable = false;
+        }
+        if(sensor.getType() == Sensor.TYPE_STEP_DETECTOR && (accuracy == SENSOR_STATUS_ACCURACY_HIGH || accuracy == SENSOR_STATUS_ACCURACY_MEDIUM)){
+            stepDetectorIsReliable = true;
         }
         else if((sensor.getType() == Sensor.TYPE_ACCELEROMETER && accuracy == SENSOR_STATUS_ACCURACY_HIGH ) || ( sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD && accuracy == SENSOR_STATUS_ACCURACY_MEDIUM)){
             isSensorReliable = true;
