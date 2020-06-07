@@ -2,12 +2,15 @@ package com.example.swisscom;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.annotation.Dimension;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -17,6 +20,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorEventListener2;
 import android.hardware.SensorManager;
 import android.media.Image;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -57,16 +61,23 @@ public class MainActivity extends AppCompatActivity {
     double squarewidth;
     double height,width;
     private ArrayList<? extends Double> blocksArray;
+    private int PHYISCAL_ACTIVITY = 1;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new StoreFragment("OPPO Find X2 Pro")).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new CatalogFragment()).commit();
         BottomNavigationView bottom_nav = findViewById(R.id.bottom_nav);
         bottom_nav.setOnNavigationItemSelectedListener(nav_listener);
-
+        if(ContextCompat.checkSelfPermission(getApplicationContext(),
+                Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_DENIED){
+            //ask for permission
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, PHYISCAL_ACTIVITY);
+            }
+        }
 //        for(int i = 0; i < gridLayout.getRowCount();i++){
 //            for(int j = 0; j < gridLayout.getColumnCount();j++){
 //                if(i == initialNode.getRow() && j == initialNode.getCol()){
