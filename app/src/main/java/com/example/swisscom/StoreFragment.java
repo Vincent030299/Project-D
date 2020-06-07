@@ -109,7 +109,7 @@ public class StoreFragment extends Fragment implements SensorEventListener {
         final Sensor stepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         sensorManager.registerListener(this,magnetometerReading,SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(this,accelerometer,SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(this,stepDetector,SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this,stepDetector,SensorManager.SENSOR_DELAY_FASTEST);
 
         return view;
     }
