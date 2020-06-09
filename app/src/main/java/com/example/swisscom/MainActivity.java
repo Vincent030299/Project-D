@@ -78,23 +78,6 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, PHYISCAL_ACTIVITY);
             }
         }
-//        for(int i = 0; i < gridLayout.getRowCount();i++){
-//            for(int j = 0; j < gridLayout.getColumnCount();j++){
-//                if(i == initialNode.getRow() && j == initialNode.getCol()){
-//                    CreateCell(R.drawable.square_start,i,j);
-//                }
-//                else if(i == finalNode.getRow() && j == finalNode.getCol()){
-//                    CreateCell(R.drawable.square_end,i,j);
-//                }
-//                else{
-//                    CreateCell(R.drawable.square,i,j);
-//                }
-//                //CreateCell(R.drawable.square,i,j);
-//            }
-//        }
-//        for(int i = 0; i < blocksArray.length;i++){
-//            CreateCell(R.drawable.square_block,blocksArray[i][0],blocksArray[i][1]);
-//        }
    }
 
     private BottomNavigationView.OnNavigationItemSelectedListener nav_listener =
@@ -104,9 +87,6 @@ public class MainActivity extends AppCompatActivity {
                     Fragment selected_fragment = null;
 
                     switch (item.getItemId()){
-                        case R.id.nav_store:
-                            selected_fragment = new StoreFragment("OPPO Find X2 Pro");
-                            break;
                         case R.id.nav_catalog:
                             selected_fragment = new CatalogFragment();
                             break;

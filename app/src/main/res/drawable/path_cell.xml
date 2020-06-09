@@ -4,7 +4,7 @@
         <shape xmlns:android="http://schemas.android.com/apk/res/android"
             android:shape="oval">
             <gradient android:type="radial" android:gradientRadius="100dp"
-                android:startColor="#C30000" android:endColor="#00ffffff" />
+                android:startColor="#00AAFF" android:endColor="#00ffffff" />
             <size
                 android:width="120dp"
                 android:height="120dp"/>

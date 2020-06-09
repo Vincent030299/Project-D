@@ -65,6 +65,7 @@ public class StoreFragment extends Fragment implements SensorEventListener {
     private int[] currentLocation;
     private boolean reachedDestination = false;
     private boolean stepDetectorIsReliable = true;
+    private SensorManager sensorManager;
 
     public StoreFragment(String productName) {
         this.productName = productName;
@@ -103,7 +104,7 @@ public class StoreFragment extends Fragment implements SensorEventListener {
             }
         }
 
-        SensorManager sensorManager = (SensorManager) this.getContext().getSystemService(Context.SENSOR_SERVICE);
+        sensorManager = (SensorManager) this.getContext().getSystemService(Context.SENSOR_SERVICE);
         final Sensor magnetometerReading = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         final Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         final Sensor stepDetector = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
@@ -256,5 +257,15 @@ public class StoreFragment extends Fragment implements SensorEventListener {
         int x = (int) (t * (t + 3) / 2 - z);
         int y = (int) (z - t * (t + 1) / 2);
         return new int[]{x, y};
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        sensorManager.unregisterListener(this);
+        if(textToSpeech != null){
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+        }
     }
 }
