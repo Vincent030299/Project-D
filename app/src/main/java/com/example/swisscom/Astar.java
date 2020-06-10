@@ -27,13 +27,13 @@ public class Astar {
     @SuppressLint("NewApi")
     public Astar(int rows, int cols, CustomNode initialNode, String productname, int hvCost, int diagonalCost) {
         HashMap<String,CustomNode> products = new HashMap<String , CustomNode>();
-        products.put("OPPO Find X2 Pro",new CustomNode(15,13));
-        products.put("Samsung Galaxy S20 Ultra 5G",new CustomNode(15,13));
-        products.put("Samsung Galaxy S20 5G",new CustomNode(15,13));
-        products.put("iPhone SE",new CustomNode(19,2));
-        products.put("Apple Watch Series 5 Stainless Steel",new CustomNode(19,2));
-        products.put("Apple Watch Series 5 Aluminum",new CustomNode(4,8));
-        products.put("Samsung Galaxy Watch Active2 44mm Aluminium",new CustomNode(4,8));
+        products.put("OPPO Find X2 Pro",new CustomNode(19,3));
+        products.put("Samsung Galaxy S20 Ultra 5G",new CustomNode(19,3));
+        products.put("Samsung Galaxy S20 5G",new CustomNode(3,8));
+        products.put("iPhone SE",new CustomNode(3,8));
+        products.put("Apple Watch Series 5 Stainless Steel",new CustomNode(3,8));
+        products.put("Apple Watch Series 5 Aluminum",new CustomNode(19,3));
+        products.put("Samsung Galaxy Watch Active2 44mm Aluminium",new CustomNode(17,12));
 
         this.hvCost = hvCost;
         this.diagonalCost = diagonalCost;

@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteQueryBuilder;
 
 import com.readystatesoftware.sqliteasset.SQLiteAssetHelper;
 public class DatabaseHelper extends SQLiteAssetHelper  {
-    private static final String DATABASE_NAME = "blocks.db";
+    private static final String DATABASE_NAME = "blocks2.db";
     private static final int dbVersion = 1;
     private final static String BLOCKS_TABLE = "blocks";
     private final static String PAIR_NUMBER = "pair";
