@@ -160,7 +160,7 @@ public class StoreFragment extends Fragment implements SensorEventListener {
                                     if(directions.size()>=1)
                                         textToSpeech.speak(directions.get(0) + " and " + directions.get(1),TextToSpeech.QUEUE_FLUSH,null);
                                     else
-                                        textToSpeech.speak("You have reached your destination",TextToSpeech.QUEUE_FLUSH,null);
+                                        textToSpeech.speak("You have reached your destination",TextToSpeech.QUEUE_ADD,null);
                                 }
                             }
                         });
@@ -177,7 +177,7 @@ public class StoreFragment extends Fragment implements SensorEventListener {
 
 
             }
-            if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR){
+            if (event.sensor.getType() == Sensor.TYPE_STEP_DETECTOR && locationFound){
                 numOfSteps = numOfSteps + event.values[0];
                 String number = directions.get(i).replaceAll("\\D+","");
                 Log.d("number", number);
@@ -262,7 +262,6 @@ public class StoreFragment extends Fragment implements SensorEventListener {
     @Override
     public void onStop() {
         super.onStop();
-        sensorManager.unregisterListener(this);
         if(textToSpeech != null){
             textToSpeech.stop();
             textToSpeech.shutdown();
